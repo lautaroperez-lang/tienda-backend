@@ -1,43 +1,57 @@
+import { useState, useEffect } from 'react';
+import { getProductos } from '../services/api';
 import ProductCard from '../components/ProductCard';
 
-const SAMPLE_PRODUCTS = [
-  {
-    id: 1,
-    title: 'Audífonos Inalámbricos Premium',
-    price: '$89.99',
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80',
-  },
-  {
-    id: 2,
-    title: 'Reloj Inteligente Sport',
-    price: '$129.99',
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80',
-  },
-  {
-    id: 3,
-    title: 'Teclado Mecánico RGB',
-    price: '$74.50',
-    image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500&q=80',
-  },
-];
-
 export default function Home() {
-  const handleAddToCart = (product) => {
-    console.log('Producto agregado al carrito:', product);
-  };
+  const [productos, setProductos] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    getProductos()
+      .then((data) => {
+        setProductos(data);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError(err.message || 'No se pudo conectar con el servidor');
+        setIsLoading(false);
+      });
+  }, []);
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold text-slate-800 mb-6">Productos Destacados</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {SAMPLE_PRODUCTS.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            onAddToCart={handleAddToCart}
-          />
-        ))}
-      </div>
+    <div className="max-w-6xl mx-auto p-8">
+      <header className="mb-8 border-b border-slate-200 pb-4">
+        <h1 className="text-3xl font-bold text-slate-800">Catálogo de Productos</h1>
+        <p className="text-slate-500 text-sm mt-1">Cumpliendo con Ley Nº 24.240 de Defensa del Consumidor</p>
+      </header>
+
+      {isLoading && (
+        <div className="bg-blue-50 text-blue-700 p-4 rounded-lg border border-blue-200 font-medium animate-pulse">
+          Cargando productos...
+        </div>
+      )}
+
+      {error && !isLoading && (
+        <div className="bg-red-100 text-red-800 p-4 rounded-lg border border-red-300 font-semibold shadow-sm">
+          🚨 {error}
+        </div>
+      )}
+
+      {!isLoading && !error && productos.length === 0 && (
+        <div className="bg-yellow-50 text-yellow-800 p-4 rounded-lg border border-yellow-200 font-medium">
+          No hay productos disponibles en este momento.
+        </div>
+      )}
+
+      {!isLoading && !error && productos.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {productos.map((producto) => (
+            <ProductCard key={producto.id} producto={producto} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

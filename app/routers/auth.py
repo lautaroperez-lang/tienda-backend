@@ -43,6 +43,9 @@ def obtener_usuario_actual(
     return usuario
 
 
+get_current_user = obtener_usuario_actual
+
+
 @router.post("/registro", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED)
 def registrar_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db)):
     existe = db.query(Usuario).filter(Usuario.email == usuario.email).first()

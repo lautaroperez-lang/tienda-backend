@@ -1,9 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCarrito } from '../context/CarritoContext';
 
 export default function Navbar() {
   const { usuario, cerrarSesion } = useAuth();
+  const { items } = useCarrito();
   const navigate = useNavigate();
+
+  const totalItems = items.reduce((sum, item) => sum + (Number(item.cantidad) || 0), 0);
 
   const handleLogout = () => {
     cerrarSesion();
@@ -20,6 +24,11 @@ export default function Navbar() {
           <Link to="/" className="text-sm font-medium text-slate-300 hover:text-white transition">
             Catálogo
           </Link>
+          {usuario && (
+            <Link to="/mis-pedidos" className="text-sm font-medium text-slate-300 hover:text-white transition">
+              Mis Pedidos
+            </Link>
+          )}
           {usuario?.rol === 'admin' && (
             <Link to="/admin" className="text-sm font-medium text-purple-300 hover:text-purple-200 transition">
               Panel Admin
@@ -28,6 +37,16 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
+          <Link
+            to="/carrito"
+            className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition"
+          >
+            <span>🛒 Carrito</span>
+            <span className="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+              {totalItems}
+            </span>
+          </Link>
+
           {usuario ? (
             <>
               <Link to="/mi-cuenta" className="text-sm font-medium text-slate-200 hover:text-white transition">

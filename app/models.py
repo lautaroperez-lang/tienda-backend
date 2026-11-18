@@ -1,17 +1,20 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from datetime import datetime
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Numeric, DateTime
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from app.database import Base
+
 
 class Producto(Base):
     __tablename__ = "productos"
 
-    id = Column(Integer, primary_key=True, index=True)
-    nombre = Column(String, index=True)
-    precio_final = Column(Float)
-    cuotas_cantidad = Column(Integer, default=1)
-    cuotas_valor = Column(Float, default=0.0)
-    garantia_meses = Column(Integer, default=0)
-    stock = Column(Integer, default=0)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    nombre = Column(String, nullable=False)
+    precio_final = Column(Float, nullable=False)
+    cuotas_cantidad = Column(Integer, nullable=False)
+    cuotas_valor = Column(Float, nullable=False)
+    garantia_meses = Column(Integer, nullable=False)
+    stock = Column(Integer, nullable=False)
 
     # Relación con ItemPedido
     items = relationship("ItemPedido", back_populates="producto")
@@ -20,7 +23,7 @@ class Producto(Base):
 class Usuario(Base):
     __tablename__ = "usuarios"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     nombre = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
@@ -33,25 +36,30 @@ class Usuario(Base):
 class Pedido(Base):
     __tablename__ = "pedidos"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
-    estado = Column(String, default="pendiente")
-    total = Column(Float, default=0.0)
+    total = Column(Numeric(12, 2), default=0.0, nullable=False)
+    estado = Column(String, default="pendiente", nullable=False)
+    creado_en = Column(DateTime, default=datetime.utcnow, server_default=func.now(), nullable=False)
 
     # Relaciones
     usuario = relationship("Usuario", back_populates="pedidos")
-    items = relationship("ItemPedido", back_populates="pedido")
+    items = relationship("ItemPedido", back_populates="pedido", cascade="all, delete-orphan")
 
 
 class ItemPedido(Base):
     __tablename__ = "items_pedido"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     pedido_id = Column(Integer, ForeignKey("pedidos.id"), nullable=False)
     producto_id = Column(Integer, ForeignKey("productos.id"), nullable=False)
-    cantidad = Column(Integer, default=1)
-    precio_unitario = Column(Float, nullable=False)
+    cantidad = Column(Integer, nullable=False)
+    precio_unitario = Column(Numeric(12, 2), nullable=False)
 
     # Relaciones
     pedido = relationship("Pedido", back_populates="items")
     producto = relationship("Producto", back_populates="items")
+
+    @property
+    def nombre_producto(self):
+        return self.producto.nombre if self.producto else None

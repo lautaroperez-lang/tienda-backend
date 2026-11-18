@@ -1,4 +1,6 @@
-from pydantic import BaseModel, EmailStr
+from datetime import datetime
+from decimal import Decimal
+from pydantic import BaseModel, EmailStr, Field
 
 # Esquemas de Producto
 class ProductoBase(BaseModel):
@@ -48,3 +50,31 @@ class Token(BaseModel):
 class LoginData(BaseModel):
     email: str
     password: str
+
+# Esquemas de Pedidos (Clase 8)
+class ItemIn(BaseModel):
+    producto_id: int
+    cantidad: int = Field(gt=0)
+
+class PedidoCreate(BaseModel):
+    items: list[ItemIn] = Field(min_length=1)
+
+class ItemOut(BaseModel):
+    id: int
+    producto_id: int
+    nombre_producto: str | None = None
+    cantidad: int
+    precio_unitario: Decimal
+
+    class Config:
+        from_attributes = True
+
+class PedidoOut(BaseModel):
+    id: int
+    estado: str
+    total: Decimal
+    creado_en: datetime
+    items: list[ItemOut]
+
+    class Config:
+        from_attributes = True

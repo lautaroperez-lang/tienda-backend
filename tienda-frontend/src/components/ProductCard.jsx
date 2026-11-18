@@ -1,7 +1,11 @@
+import { useCarrito } from '../context/CarritoContext';
+
 export default function ProductCard({ producto }) {
+  const { agregar } = useCarrito();
+
   if (!producto) return null;
 
-  const { nombre, precio_final, cuotas_cantidad, cuotas_valor, garantia_meses } = producto;
+  const { nombre, precio_final, cuotas_cantidad, cuotas_valor, garantia_meses, stock = 0 } = producto;
 
   return (
     <div className="bg-white rounded-xl shadow-md border border-slate-100 p-6 flex flex-col justify-between hover:shadow-lg transition-shadow duration-300">
@@ -18,14 +22,34 @@ export default function ProductCard({ producto }) {
         <div className="space-y-2 text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
           <p className="flex items-center justify-between">
             <span className="font-semibold text-slate-700">Financiación:</span>
-            <span>{cuotas_cantidad} cuotas de ${typeof cuotas_valor === 'number' ? cuotas_valor.toFixed(2) : cuotas_valor}</span>
+            <span>
+              {cuotas_cantidad} cuotas de ${typeof cuotas_valor === 'number' ? cuotas_valor.toFixed(2) : cuotas_valor}
+            </span>
           </p>
           <p className="flex items-center justify-between">
             <span className="font-semibold text-slate-700">Garantía:</span>
             <span>{garantia_meses} meses</span>
           </p>
+          <p className="flex items-center justify-between">
+            <span className="font-semibold text-slate-700">Stock disponible:</span>
+            <span className={`font-semibold ${stock > 0 ? 'text-slate-800' : 'text-red-500'}`}>
+              {stock > 0 ? `${stock} unid.` : 'Agotado'}
+            </span>
+          </p>
         </div>
       </div>
+
+      <button
+        onClick={() => agregar(producto, 1)}
+        disabled={stock <= 0}
+        className={`mt-5 w-full py-2.5 px-4 rounded-lg font-semibold text-white transition duration-200 ${
+          stock <= 0
+            ? 'bg-slate-300 cursor-not-allowed'
+            : 'bg-blue-600 hover:bg-blue-700 shadow-sm hover:shadow-md'
+        }`}
+      >
+        {stock <= 0 ? 'Sin stock' : 'Agregar al carrito'}
+      </button>
     </div>
   );
 }

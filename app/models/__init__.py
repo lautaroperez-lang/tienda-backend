@@ -1,5 +1,7 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from datetime import datetime
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Numeric, DateTime
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from app.database import Base
 
 
@@ -36,12 +38,13 @@ class Pedido(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
-    estado = Column(String, default="pendiente")
-    total = Column(Float, default=0.0)
+    total = Column(Numeric(12, 2), default=0.0, nullable=False)
+    estado = Column(String, default="pendiente", nullable=False)
+    creado_en = Column(DateTime, default=datetime.utcnow, server_default=func.now(), nullable=False)
 
     # Relaciones
     usuario = relationship("Usuario", back_populates="pedidos")
-    items = relationship("ItemPedido", back_populates="pedido")
+    items = relationship("ItemPedido", back_populates="pedido", cascade="all, delete-orphan")
 
 
 class ItemPedido(Base):
@@ -50,9 +53,13 @@ class ItemPedido(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     pedido_id = Column(Integer, ForeignKey("pedidos.id"), nullable=False)
     producto_id = Column(Integer, ForeignKey("productos.id"), nullable=False)
-    cantidad = Column(Integer, default=1)
-    precio_unitario = Column(Float, nullable=False)
+    cantidad = Column(Integer, nullable=False)
+    precio_unitario = Column(Numeric(12, 2), nullable=False)
 
     # Relaciones
     pedido = relationship("Pedido", back_populates="items")
     producto = relationship("Producto", back_populates="items")
+
+    @property
+    def nombre_producto(self):
+        return self.producto.nombre if self.producto else None

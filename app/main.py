@@ -1,10 +1,12 @@
 import os
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
-from app.database import engine, Base
+from app.database import engine, Base, get_db
 from app.routers import auth, pedidos, usuarios, productos
 
 # Autocrear tablas en la base de datos
@@ -12,13 +14,13 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="ModaMinimal - E-commerce API")
 
-# Asegurar directorios para archivos estáticos
-uploads_dir = Path("uploads")
-uploads_dir.mkdir(exist_ok=True)
-(uploads_dir / "productos").mkdir(parents=True, exist_ok=True)
+# Asegurar directorios para archivos estáticos antes de montar
+Path("uploads/productos").mkdir(parents=True, exist_ok=True)
+Path("app/static/demo").mkdir(parents=True, exist_ok=True)
 
 # Montar servidor de archivos estáticos
 app.mount("/static", StaticFiles(directory="uploads"), name="static")
+app.mount("/demo", StaticFiles(directory="app/static/demo"), name="demo")
 
 # Configuración CORS con orígenes controlados
 allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
@@ -54,3 +56,9 @@ def read_root():
         "mensaje": "Bienvenido a la API de ModaMinimal",
         "normativa": "Ley Nº 24.240 - Defensa del Consumidor",
     }
+
+
+@app.get("/salud")
+def check_salud(db: Session = Depends(get_db)):
+    db.execute(text("SELECT 1"))
+    return {"estado": "ok", "base": "ok"}

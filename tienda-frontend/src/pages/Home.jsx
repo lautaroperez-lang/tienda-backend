@@ -5,9 +5,14 @@ import ProductCard from '../components/ProductCard';
 export default function Home() {
   const [productos, setProductos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [lento, setLento] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setLento(true);
+    }, 5000);
+
     getProductos()
       .then((data) => {
         setProductos(data);
@@ -17,7 +22,12 @@ export default function Home() {
         console.error(err);
         setError(err.message || 'No se pudo conectar con el servidor');
         setIsLoading(false);
+      })
+      .finally(() => {
+        clearTimeout(timer);
       });
+
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -28,8 +38,13 @@ export default function Home() {
       </header>
 
       {isLoading && (
-        <div className="bg-blue-50 text-blue-700 p-4 rounded-lg border border-blue-200 font-medium animate-pulse">
-          Cargando productos...
+        <div
+          role="status"
+          className="bg-blue-50 text-blue-700 p-4 rounded-lg border border-blue-200 font-medium animate-pulse"
+        >
+          {lento
+            ? 'Despertando el servidor, puede tardar un minuto…'
+            : 'Cargando productos…'}
         </div>
       )}
 

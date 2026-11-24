@@ -17,6 +17,15 @@ from app.models import Producto, Usuario, Pedido, ItemPedido, SolicitudRevocacio
 # Alembic Config object
 config = context.config
 
+# Configurar sqlalchemy.url dinámicamente desde variable de entorno o settings
+database_url = os.getenv("DATABASE_URL")
+if database_url:
+    # Render y otros proveedores a menudo usan postgres:// en vez de postgresql://
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    # Escapar el carácter % para evitar fallos de interpolación con ConfigParser
+    config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))
+
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 

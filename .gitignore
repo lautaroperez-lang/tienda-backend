@@ -14,3 +14,7 @@ env/
 # Logs y Cache
 *.log
 .pytest_cache/
+
+# Archivos estáticos subidos
+uploads/*
+!uploads/.gitkeep

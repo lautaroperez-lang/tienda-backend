@@ -186,3 +186,52 @@ export async function eliminarMiCuenta() {
   }
   return await response.json();
 }
+
+export function urlImagen(producto) {
+  if (!producto?.imagen_url) return null;
+  if (producto.imagen_url.startsWith('http://') || producto.imagen_url.startsWith('https://')) {
+    return producto.imagen_url;
+  }
+  return `${BASE_URL}${producto.imagen_url}`;
+}
+
+export async function subirImagen(id, archivo) {
+  const fd = new FormData();
+  fd.append('archivo', archivo);
+
+  const response = await fetch(`${BASE_URL}/productos/${id}/imagen`, {
+    method: 'POST',
+    headers: {
+      ...authHeaders(),
+    },
+    body: fd,
+  });
+
+  if (response.status === 413) {
+    throw new Error('La imagen pasa de 2 MB');
+  }
+  if (response.status === 415) {
+    throw new Error('Ese archivo no es una imagen');
+  }
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'Error al subir la imagen');
+  }
+  return await response.json();
+}
+
+export async function crearProducto(datos) {
+  const response = await fetch(`${BASE_URL}/productos/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders(),
+    },
+    body: JSON.stringify(datos),
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'Error al crear el producto');
+  }
+  return await response.json();
+}

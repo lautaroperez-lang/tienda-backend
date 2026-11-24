@@ -1,8 +1,9 @@
+import os
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from jose import jwt
 
-SECRET_KEY = "tu_clave_secreta_super_segura_aqui"
+SECRET_KEY = os.getenv("SECRET_KEY", "tu_clave_secreta_super_segura_aqui")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
@@ -15,6 +16,9 @@ def verificar_password(plain_password: str, hashed_password: str) -> bool:
 
 def obtener_password_hash(password: str) -> str:
     return pwd_context.hash(password)
+
+
+hash_password = obtener_password_hash
 
 
 def crear_token_acceso(data: dict, expires_delta: timedelta | None = None) -> str:

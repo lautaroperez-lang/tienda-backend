@@ -10,22 +10,19 @@ class ProductoBase(BaseModel):
     cuotas_valor: float = 0.0
     garantia_meses: int = 0
     stock: int = 0
+    imagen_url: str | None = None
 
 class ProductoCreate(ProductoBase):
     pass
 
-class ProductoResponse(ProductoBase):
+class ProductoOut(ProductoBase):
     id: int
 
     class Config:
         from_attributes = True
 
-class ProductoSchema(ProductoBase):
-    id: int | None = None
-
-    class Config:
-        from_attributes = True
-
+ProductoResponse = ProductoOut
+ProductoSchema = ProductoOut
 Producto = ProductoSchema
 
 # Esquemas de Autenticación / Usuarios (Clase 5)

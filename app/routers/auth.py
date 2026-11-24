@@ -54,6 +54,15 @@ def obtener_usuario_actual(
 get_current_user = obtener_usuario_actual
 
 
+def require_admin(usuario_actual: Usuario = Depends(get_current_user)) -> Usuario:
+    if usuario_actual.rol != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requieren permisos de administrador",
+        )
+    return usuario_actual
+
+
 @router.post("/registro", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED)
 def registrar_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db)):
     existe = db.query(Usuario).filter(Usuario.email == usuario.email).first()

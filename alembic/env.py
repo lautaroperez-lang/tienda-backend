@@ -12,7 +12,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Importar la Base y todos los modelos
 from app.database import Base
-from app.models import Producto, Usuario, Pedido, ItemPedido
+from app.models import Producto, Usuario, Pedido, ItemPedido, SolicitudRevocacion
 
 # Alembic Config object
 config = context.config

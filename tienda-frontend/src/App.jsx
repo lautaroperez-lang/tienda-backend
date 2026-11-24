@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CarritoProvider } from './context/CarritoContext';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import RutaProtegida from './components/RutaProtegida';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -10,6 +11,8 @@ import MiCuenta from './pages/MiCuenta';
 import PanelAdmin from './pages/PanelAdmin';
 import Carrito from './pages/Carrito';
 import MisPedidos from './pages/MisPedidos';
+import Arrepentimiento from './pages/Arrepentimiento';
+import MisDatos from './pages/MisDatos';
 
 function App() {
   return (
@@ -24,12 +27,14 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/registro" element={<Registro />} />
+                <Route path="/arrepentimiento" element={<Arrepentimiento />} />
 
                 {/* Rutas protegidas por sesión */}
                 <Route element={<RutaProtegida />}>
                   <Route path="/mi-cuenta" element={<MiCuenta />} />
                   <Route path="/carrito" element={<Carrito />} />
                   <Route path="/mis-pedidos" element={<MisPedidos />} />
+                  <Route path="/mis-datos" element={<MisDatos />} />
                 </Route>
 
                 {/* Ruta protegida por rol admin */}
@@ -41,6 +46,7 @@ function App() {
                 <Route path="*" element={<Home />} />
               </Routes>
             </main>
+            <Footer />
           </div>
         </CarritoProvider>
       </AuthProvider>

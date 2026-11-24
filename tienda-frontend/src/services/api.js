@@ -114,3 +114,75 @@ export async function getMisPedidos() {
   }
   return await response.json();
 }
+
+export async function revocarPedido(pedidoId) {
+  const response = await fetch(`${BASE_URL}/pedidos/${pedidoId}/revocacion`, {
+    method: 'POST',
+    headers: {
+      ...authHeaders(),
+    },
+  });
+  if (response.status === 401) {
+    throw new Error('Tu sesión venció. Volvé a entrar.');
+  }
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'No se pudo revocar el pedido');
+  }
+  return await response.json();
+}
+
+export async function getMisDatos() {
+  const response = await fetch(`${BASE_URL}/usuarios/me/datos`, {
+    headers: {
+      ...authHeaders(),
+    },
+  });
+  if (response.status === 401) {
+    throw new Error('Tu sesión venció. Volvé a entrar.');
+  }
+  if (!response.ok) {
+    throw new Error('No se pudieron obtener tus datos personales');
+  }
+  return await response.json();
+}
+
+export async function exportarMisDatos() {
+  const response = await fetch(`${BASE_URL}/usuarios/me/exportar`, {
+    headers: {
+      ...authHeaders(),
+    },
+  });
+  if (response.status === 401) {
+    throw new Error('Tu sesión venció. Volvé a entrar.');
+  }
+  if (!response.ok) {
+    throw new Error('No se pudo exportar el archivo de datos');
+  }
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'mis-datos.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+}
+
+export async function eliminarMiCuenta() {
+  const response = await fetch(`${BASE_URL}/usuarios/me`, {
+    method: 'DELETE',
+    headers: {
+      ...authHeaders(),
+    },
+  });
+  if (response.status === 401) {
+    throw new Error('Tu sesión venció. Volvé a entrar.');
+  }
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'No se pudo dar de baja la cuenta');
+  }
+  return await response.json();
+}

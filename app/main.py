@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import engine, Base, get_db
 from app.models import Producto as ProductoModel
 from app.schemas import ProductoSchema
-from app.routers import auth, pedidos
+from app.routers import auth, pedidos, usuarios
 
 # Autocrear tablas en la base de datos
 Base.metadata.create_all(bind=engine)
@@ -25,6 +25,7 @@ app.add_middleware(
 # Incluir el router en la instancia de FastAPI
 app.include_router(auth.router)
 app.include_router(pedidos.router)
+app.include_router(usuarios.router)
 
 
 @app.get("/")

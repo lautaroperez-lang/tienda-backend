@@ -25,9 +25,14 @@ export default function Navbar() {
             Catálogo
           </Link>
           {usuario && (
-            <Link to="/mis-pedidos" className="text-sm font-medium text-slate-300 hover:text-white transition">
-              Mis Pedidos
-            </Link>
+            <>
+              <Link to="/mis-pedidos" className="text-sm font-medium text-slate-300 hover:text-white transition">
+                Mis Pedidos
+              </Link>
+              <Link to="/mis-datos" className="text-sm font-medium text-slate-300 hover:text-white transition">
+                Mis Datos
+              </Link>
+            </>
           )}
           {usuario?.rol === 'admin' && (
             <Link to="/admin" className="text-sm font-medium text-purple-300 hover:text-purple-200 transition">

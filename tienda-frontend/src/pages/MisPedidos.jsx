@@ -1,35 +1,60 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getMisPedidos } from '../services/api';
+import { getMisPedidos, revocarPedido } from '../services/api';
 
 export default function MisPedidos() {
   const [pedidos, setPedidos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
+  const [codigoSeguimiento, setCodigoSeguimiento] = useState(null);
+  const [enviandoRevocacion, setEnviandoRevocacion] = useState(null);
+  const [errorRevocacion, setErrorRevocacion] = useState(null);
 
-  useEffect(() => {
-    let isMounted = true;
+  const cargarPedidos = () => {
     setCargando(true);
     setError(null);
 
     getMisPedidos()
       .then((data) => {
-        if (isMounted) {
-          setPedidos(data);
-          setCargando(false);
-        }
+        setPedidos(data);
+        setCargando(false);
       })
       .catch((err) => {
-        if (isMounted) {
-          setError(err.message || 'Error al cargar tus pedidos');
-          setCargando(false);
-        }
+        setError(err.message || 'Error al cargar tus pedidos');
+        setCargando(false);
       });
+  };
 
-    return () => {
-      isMounted = false;
-    };
+  useEffect(() => {
+    cargarPedidos();
   }, []);
+
+  const esRevocable = (pedido) => {
+    if (pedido.estado === 'cancelado') return false;
+    if (!pedido.creado_en) return false;
+    const diffDias = (new Date() - new Date(pedido.creado_en)) / (1000 * 60 * 60 * 24);
+    return diffDias <= 10;
+  };
+
+  const handleRevocar = async (pedidoId) => {
+    if (enviandoRevocacion) return;
+    const confirma = window.confirm('¿Estás seguro de que deseás revocar la compra de este pedido?');
+    if (!confirma) return;
+
+    setEnviandoRevocacion(pedidoId);
+    setErrorRevocacion(null);
+
+    try {
+      const res = await revocarPedido(pedidoId);
+      setCodigoSeguimiento(res.codigo);
+      const data = await getMisPedidos();
+      setPedidos(data);
+    } catch (err) {
+      setErrorRevocacion(err.message || 'Error al procesar la revocación');
+    } finally {
+      setEnviandoRevocacion(null);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-6 sm:p-8">
@@ -37,6 +62,42 @@ export default function MisPedidos() {
         <h1 className="text-3xl font-bold text-slate-800">Mis Pedidos</h1>
         <p className="text-sm text-slate-500 mt-1">Historial de compras realizadas</p>
       </header>
+
+      {/* Bloque de éxito de revocación con role="status" */}
+      {codigoSeguimiento && (
+        <div
+          role="status"
+          className="mb-6 p-4 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200 shadow-sm flex items-start justify-between"
+        >
+          <div>
+            <p className="font-bold text-base">Solicitud registrada.</p>
+            <p className="text-sm mt-0.5">
+              Tu código de seguimiento es:{' '}
+              <strong className="font-mono text-emerald-950 bg-emerald-200 px-2 py-0.5 rounded">
+                {codigoSeguimiento}
+              </strong>
+            </p>
+          </div>
+          <button
+            onClick={() => setCodigoSeguimiento(null)}
+            className="text-emerald-700 hover:text-emerald-900 font-bold ml-4 text-lg"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      {errorRevocacion && (
+        <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-xl border border-red-200 text-sm font-medium flex items-center justify-between">
+          <span>⚠️ {errorRevocacion}</span>
+          <button
+            onClick={() => setErrorRevocacion(null)}
+            className="text-red-500 hover:text-red-700 font-bold ml-4"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* Estado 1: Cargando */}
       {cargando && (
@@ -76,6 +137,8 @@ export default function MisPedidos() {
                 })
               : 'Fecha no disponible';
 
+            const puedeRevocar = esRevocable(pedido);
+
             return (
               <div
                 key={pedido.id}
@@ -87,18 +150,41 @@ export default function MisPedidos() {
                       <h3 className="text-xl font-bold text-slate-800">
                         Pedido #{pedido.id}
                       </h3>
-                      <span className="px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider rounded-full bg-amber-100 text-amber-800">
+                      <span
+                        className={`px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider rounded-full ${
+                          pedido.estado === 'cancelado'
+                            ? 'bg-rose-100 text-rose-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
                         {pedido.estado}
                       </span>
                     </div>
                     <p className="text-xs text-slate-400 mt-1">{fecha}</p>
                   </div>
 
-                  <div className="text-left sm:text-right">
-                    <span className="text-xs text-slate-400 block">Total</span>
-                    <span className="text-2xl font-black text-blue-600">
-                      ${Number(pedido.total).toFixed(2)}
-                    </span>
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3">
+                    <div>
+                      <span className="text-xs text-slate-400 block text-right">Total</span>
+                      <span className="text-2xl font-black text-blue-600">
+                        ${Number(pedido.total).toFixed(2)}
+                      </span>
+                    </div>
+
+                    {puedeRevocar && (
+                      <button
+                        onClick={() => handleRevocar(pedido.id)}
+                        disabled={enviandoRevocacion === pedido.id}
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold text-white transition shadow-sm ${
+                          enviandoRevocacion === pedido.id
+                            ? 'bg-slate-300 cursor-not-allowed'
+                            : 'bg-amber-500 hover:bg-amber-600'
+                        }`}
+                        title="Ejercer derecho de revocación (Ley 24.240)"
+                      >
+                        {enviandoRevocacion === pedido.id ? 'Cancelando...' : 'Arrepentirme'}
+                      </button>
+                    )}
                   </div>
                 </div>
 

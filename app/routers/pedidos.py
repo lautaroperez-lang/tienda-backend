@@ -4,7 +4,7 @@ from app.database import get_db
 from app.models import Pedido, Usuario
 from app.schemas import PedidoCreate, PedidoOut
 from app.routers.auth import get_current_user
-from app.services import pedido_service
+from app.services import pedido_service, revocacion_service
 
 router = APIRouter(prefix="/pedidos", tags=["Pedidos"])
 
@@ -52,3 +52,17 @@ def obtener_pedido(
         )
 
     return pedido
+
+
+@router.post("/{pedido_id}/revocacion", status_code=status.HTTP_201_CREATED)
+def solicitar_revocacion(
+    pedido_id: int,
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(get_current_user),
+):
+    solicitud = revocacion_service.revocar(db, usuario_actual, pedido_id)
+    return {
+        "codigo": solicitud.codigo,
+        "pedido_id": solicitud.pedido_id,
+        "creada_en": solicitud.creada_en,
+    }

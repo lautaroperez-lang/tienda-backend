@@ -40,6 +40,14 @@ def obtener_usuario_actual(
     usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
     if usuario is None:
         raise credenciales_error
+
+    if not usuario.activo:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Cuenta inactiva o dada de baja",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     return usuario
 
 
